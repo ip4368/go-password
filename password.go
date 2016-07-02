@@ -42,8 +42,10 @@ func makeSalt(n int) string {
 type passAndSalt struct {
     pass string
     salt string
+    valid bool
 }
 func autoAddSalt(s string) passAndSalt {
+    if !checkPassword(s) { return passAndSalt{"", "", false} }
     minLen := 8
     passB := []byte(s)
     salted := make([]byte, len(passB)+minLen)
@@ -55,16 +57,18 @@ func autoAddSalt(s string) passAndSalt {
     for i := minLen; i<len(passB)-minLen; i++ {
         salted[2*minLen+i] = passB[minLen+i]
     }
-    return passAndSalt{string(salted), salt}
+    return passAndSalt{string(salted), salt, true}
 }
 
 type hashedAndSalt struct {
     hash string
     salt string
+    valid bool
 }
 func saltedHashed(s string) hashedAndSalt {
     salted := autoAddSalt(s)
+    if !salted.valid { return hashedAndSalt{"", "", false}}
     h := sha256.New()
     hash := string(base64.StdEncoding.EncodeToString(h.Sum([]byte(salted.pass))))
-    return hashedAndSalt{hash, salted.salt}
+    return hashedAndSalt{hash, salted.salt, true}
 }
