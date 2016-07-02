@@ -8,7 +8,7 @@ import (
     "crypto/sha256"
 )
 
-func checkPassword(s string) bool {
+func CheckPassword(s string) bool {
     pattern := "^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$"
     matched, _ := regexp.MatchString(pattern, s)
     return matched
@@ -21,7 +21,7 @@ const (
     letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 )
 var src = rand.NewSource(time.Now().UnixNano())
-func makeSalt(n int) string {
+func MakeSalt(n int) string {
     salt := make([]byte, n)
     // A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
     for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
@@ -44,12 +44,12 @@ type passAndSalt struct {
     salt string
     valid bool
 }
-func autoAddSalt(s string) passAndSalt {
-    if !checkPassword(s) { return passAndSalt{"", "", false} }
+func AutoAddSalt(s string) passAndSalt {
+    if !CheckPassword(s) { return passAndSalt{"", "", false} }
     minLen := 8
     passB := []byte(s)
     salted := make([]byte, len(passB)+minLen)
-    salt := makeSalt(minLen)
+    salt := MakeSalt(minLen)
     for i := 0; i<minLen; i++ {
         salted[2*i] = passB[i]
         salted[2*i+1] = salt[i]
@@ -65,8 +65,8 @@ type hashedAndSalt struct {
     salt string
     valid bool
 }
-func saltedHashed(s string) hashedAndSalt {
-    salted := autoAddSalt(s)
+func SaltedHashed(s string) hashedAndSalt {
+    salted := AutoAddSalt(s)
     if !salted.valid { return hashedAndSalt{"", "", false}}
     h := sha256.New()
     hash := string(base64.StdEncoding.EncodeToString(h.Sum([]byte(salted.pass))))
