@@ -43,7 +43,6 @@ type passAndSalt struct {
     pass string
     salt string
 }
-
 func autoAddSalt(s string) passAndSalt {
     minLen := 8
     passB := []byte(s)
@@ -63,7 +62,6 @@ type hashedAndSalt struct {
     hash string
     salt string
 }
-
 func saltedHashed(s string) hashedAndSalt {
     salted := autoAddSalt(s)
     h := sha256.New()
