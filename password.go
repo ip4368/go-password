@@ -72,7 +72,7 @@ func HashWithSalt(s string, salt string) (string, string, bool) {
     return hash, salt, true
 }
 
-func CompareHashed(pass string, salt string, hash string) (bool, bool) {
+func Compare(pass string, salt string, hash string) (bool, bool) {
     hashed, _, valid := HashWithSalt(pass, salt)
     return strings.Compare(hashed, hash) == 0, valid
 }
