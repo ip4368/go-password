@@ -40,13 +40,8 @@ func MakeSalt(n int) string {
     return string(salt)
 }
 
-type passAndSalt struct {
-    pass string
-    salt string
-    valid bool
-}
-func AutoAddSalt(s string) passAndSalt {
-    if !ValidatePassword(s) { return passAndSalt{"", "", false} }
+func AutoAddSalt(s string) (string, string, bool) {
+    if !ValidatePassword(s) { return "", "", false }
     minLen := 8
     passB := []byte(s)
     salted := make([]byte, len(passB)+minLen)
@@ -58,31 +53,26 @@ func AutoAddSalt(s string) passAndSalt {
     for i := minLen; i<len(passB)-minLen; i++ {
         salted[2*minLen+i] = passB[minLen+i]
     }
-    return passAndSalt{string(salted), salt, true}
+    return string(salted), salt, true
 }
 
-type hashAndSalt struct {
-    hash string
-    salt string
-    valid bool
-}
-func HashAutoSalt(s string) hashAndSalt {
-    salted := AutoAddSalt(s)
-    if !salted.valid { return hashAndSalt{"", "", false}}
+func HashAutoSalt(s string) (string, string, bool) {
+    salted, salt, valid := AutoAddSalt(s)
+    if !valid { return "", "", false }
     h := sha256.New()
-    hash := string(base64.StdEncoding.EncodeToString(h.Sum([]byte(salted.pass))))
-    return hashAndSalt{hash, salted.salt, true}
+    hash := string(base64.StdEncoding.EncodeToString(h.Sum([]byte(salted))))
+    return hash, salt, true
 }
 
 
-func HashWithSalt(s string, salt string) hashAndSalt {
-    if !ValidatePassword(s) { return hashAndSalt{"", "", false} }
+func HashWithSalt(s string, salt string) (string, string, bool) {
+    if !ValidatePassword(s) { return "", "", false }
     h := sha256.New()
     hash := string(base64.StdEncoding.EncodeToString(h.Sum([]byte(salt))))
-    return hashAndSalt{hash, salt, true}
+    return hash, salt, true
 }
 
-func CompareHashed(pass string, salt string, hash string) bool {
-    hashed := HashWithSalt(pass, salt)
-    return strings.Compare(hashed.hash, hash) == 0
+func CompareHashed(pass string, salt string, hash string) (bool, bool) {
+    hashed, _, valid := HashWithSalt(pass, salt)
+    return strings.Compare(hashed, hash) == 0, valid
 }
