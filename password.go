@@ -75,8 +75,8 @@ func AutoAddSalt(s string) (string, string, bool) {
         salted[2*i] = passB[i]
         salted[2*i+1] = salt[i]
     }
-    for i := minLen; i<len(passB)-minLen; i++ {
-        salted[2*minLen+i] = passB[minLen+i]
+    for i := minLen; i<len(passB); i++ {
+        salted[minLen+i] = passB[i]
     }
     return string(salted), salt, true
 }
