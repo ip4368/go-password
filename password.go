@@ -6,9 +6,10 @@ import (
     "time"
     "encoding/base64"
     "crypto/sha256"
+    "strings"
 )
 
-func CheckPassword(s string) bool {
+func ValidatePassword(s string) bool {
     pattern := "^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$"
     matched, _ := regexp.MatchString(pattern, s)
     return matched
@@ -45,7 +46,7 @@ type passAndSalt struct {
     valid bool
 }
 func AutoAddSalt(s string) passAndSalt {
-    if !CheckPassword(s) { return passAndSalt{"", "", false} }
+    if !ValidatePassword(s) { return passAndSalt{"", "", false} }
     minLen := 8
     passB := []byte(s)
     salted := make([]byte, len(passB)+minLen)
@@ -60,15 +61,28 @@ func AutoAddSalt(s string) passAndSalt {
     return passAndSalt{string(salted), salt, true}
 }
 
-type hashedAndSalt struct {
+type hashAndSalt struct {
     hash string
     salt string
     valid bool
 }
-func SaltedHashed(s string) hashedAndSalt {
+func HashAutoSalt(s string) hashAndSalt {
     salted := AutoAddSalt(s)
-    if !salted.valid { return hashedAndSalt{"", "", false}}
+    if !salted.valid { return hashAndSalt{"", "", false}}
     h := sha256.New()
     hash := string(base64.StdEncoding.EncodeToString(h.Sum([]byte(salted.pass))))
-    return hashedAndSalt{hash, salted.salt, true}
+    return hashAndSalt{hash, salted.salt, true}
+}
+
+
+func HashWithSalt(s string, salt string) hashAndSalt {
+    if !ValidatePassword(s) { return hashAndSalt{"", "", false} }
+    h := sha256.New()
+    hash := string(base64.StdEncoding.EncodeToString(h.Sum([]byte(salt))))
+    return hashAndSalt{hash, salt, true}
+}
+
+func CompareHashed(pass string, salt string, hash string) bool {
+    hashed := HashWithSalt(pass, salt)
+    return strings.Compare(hashed.hash, hash) == 0
 }
