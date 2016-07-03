@@ -7,11 +7,13 @@ import (
     "encoding/base64"
     "crypto/sha256"
     "strings"
+    //"fmt"
 )
 
 func ValidatePassword(s string) bool {
     pattern := "^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$"
-    matched, _ := regexp.MatchString(pattern, s)
+    compiledp, _ := regexp.Compile(pattern)
+    matched := compiledp.MatchString(s)
     return matched
 }
 
