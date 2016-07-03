@@ -1,7 +1,6 @@
 package password
 
 import (
-    "regexp"
     "math/rand"
     "time"
     "encoding/base64"
@@ -10,11 +9,35 @@ import (
     //"fmt"
 )
 
+func isDigit(ch rune) bool {
+    return '0' <= ch && ch <= '9'
+}
+func isLower(ch rune) bool {
+    return 'a' <= ch && ch <= 'z'
+}
+func isUpper(ch rune) bool {
+    return 'A' <= ch && ch <= 'Z'
+}
+func checkAll(s string) bool {
+    // length
+    length := len(s)
+    if (length < 8 && length > 20) { return false }
+
+    // check contain at least 1 from each families
+    containDigit := false
+    containLower := false
+    containUpper := false
+    for _, ch := range s {
+        containDigit = containDigit || isDigit(ch)
+        containLower = containLower || isLower(ch)
+        containUpper = containUpper || isUpper(ch)
+        if containDigit && containLower && containUpper { return true }
+    }
+    return false
+}
+
 func ValidatePassword(s string) bool {
-    pattern := "^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{8,20}$"
-    compiledp, _ := regexp.Compile(pattern)
-    matched := compiledp.MatchString(s)
-    return matched
+    return checkAll(s)
 }
 
 const letterBytes = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
