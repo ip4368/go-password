@@ -9,6 +9,8 @@ import (
     //"fmt"
 )
 
+const minLen int = 8
+
 func isDigit(ch rune) bool {
     return '0' <= ch && ch <= '9'
 }
@@ -21,7 +23,7 @@ func isUpper(ch rune) bool {
 func checkAll(s string) bool {
     // length
     length := len(s)
-    if (length < 8 && length > 20) { return false }
+    if (length < minLen && length > 20) { return false }
 
     // check contain at least 1 from each families
     containDigit := false
@@ -65,12 +67,10 @@ func MakeSalt(n int) string {
     return string(salt)
 }
 
-func AutoAddSalt(s string) (string, string, bool) {
-    if !ValidatePassword(s) { return "", "", false }
-    minLen := 8
+func AddSalt(s, salt string) (string, bool) {
+    if (!ValidatePassword(s)) || (len(salt) != 8) { return "", true }
     passB := []byte(s)
     salted := make([]byte, len(passB)+minLen)
-    salt := MakeSalt(minLen)
     for i := 0; i<minLen; i++ {
         salted[2*i] = passB[i]
         salted[2*i+1] = salt[i]
@@ -78,23 +78,34 @@ func AutoAddSalt(s string) (string, string, bool) {
     for i := minLen; i<len(passB); i++ {
         salted[minLen+i] = passB[i]
     }
-    return string(salted), salt, true
+    return string(salted), false
+}
+
+func AutoAddSalt(s string) (string, string, bool) {
+    if !ValidatePassword(s) { return "", "", true }
+    salt := MakeSalt(minLen)
+    salted, err := AddSalt(s, salt)
+    return salted, salt, err
 }
 
 func HashAutoSalt(s string) (string, string, bool) {
     salted, salt, valid := AutoAddSalt(s)
-    if !valid { return "", "", false }
+    if !valid { return "", "", true }
+    
     h := sha256.New()
     hash := string(base64.StdEncoding.EncodeToString(h.Sum([]byte(salted))))
-    return hash, salt, true
+    return hash, salt, false
 }
 
-
 func HashWithSalt(s string, salt string) (string, string, bool) {
-    if !ValidatePassword(s) { return "", "", false }
+    if !ValidatePassword(s) { return "", "", true }
+    
+    salted, err := AddSalt(s, salt)
+    if err { return "", "", true }
+    
     h := sha256.New()
-    hash := string(base64.StdEncoding.EncodeToString(h.Sum([]byte(salt))))
-    return hash, salt, true
+    hash := string(base64.StdEncoding.EncodeToString(h.Sum([]byte(salted))))
+    return hash, salt, false
 }
 
 func Compare(pass string, salt string, hash string) (bool, bool) {
