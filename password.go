@@ -89,8 +89,8 @@ func AutoAddSalt(s string) (string, string, bool) {
 }
 
 func HashAutoSalt(s string) (string, string, bool) {
-    salted, salt, valid := AutoAddSalt(s)
-    if !valid { return "", "", true }
+    salted, salt, err := AutoAddSalt(s)
+    if err { return "", "", true }
     
     h := sha256.New()
     hash := string(base64.StdEncoding.EncodeToString(h.Sum([]byte(salted))))
